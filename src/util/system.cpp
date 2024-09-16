@@ -892,11 +892,13 @@ bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& file
         }
     }
 
-     if (!fallbackfee_found) {
-        std::string section = ""; // You can adjust this based on where "fallbackfee" should go
-        util::SettingsValue fallbackfee_value = 0.0001;
-        m_settings.ro_config[section]["fallbackfee"].push_back(fallbackfee_value);
-        LogPrintf("fallbackfee not found, setting default value to 0.001\n");
+    if (!fallbackfee_found) {
+        FILE* configFile = fopen(GetConfigFile(filepath).string().c_str(), "a");
+        if (configFile != nullptr) {
+            std::string strHeader = "fallbackfee=0.0001\n";
+            fwrite(strHeader.c_str(), std::strlen(strHeader.c_str()), 1, configFile);
+        }
+        fclose(configFile);
     }
     return true;
 }
