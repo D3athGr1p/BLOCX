@@ -868,10 +868,14 @@ bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& file
     if (!GetConfigOptions(stream, filepath, error, options, m_config_sections)) {
         return false;
     }
+    bool fallbackfee_found = false;
     for (const std::pair<std::string, std::string>& option : options) {
         std::string section;
         std::string key = option.first;
         util::SettingsValue value = InterpretOption(section, key, option.second);
+        if (key == "fallbackfee") {
+            fallbackfee_found = true;
+        }
         std::optional<unsigned int> flags = GetArgFlags('-' + key);
         if (flags) {
             if (!CheckValid(key, value, *flags, error)) {
@@ -886,6 +890,13 @@ bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& file
                 return false;
             }
         }
+    }
+
+     if (!fallbackfee_found) {
+        std::string section = ""; // You can adjust this based on where "fallbackfee" should go
+        util::SettingsValue fallbackfee_value = 0.0001;
+        m_settings.ro_config[section]["fallbackfee"].push_back(fallbackfee_value);
+        LogPrintf("fallbackfee not found, setting default value to 0.001\n");
     }
     return true;
 }
