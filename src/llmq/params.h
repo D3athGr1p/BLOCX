@@ -69,18 +69,21 @@ struct LLMQParams {
     // The interval in number blocks for DKGs and the creation of LLMQs. If set to 24 for example, a DKG will start
     // every 24 blocks, which is approximately once every hour.
     int dkgInterval;
+    int dkgNewInterval;
 
     // The number of blocks per phase in a DKG session. There are 6 phases plus the mining phase that need to be processed
     // per DKG. Set this value to a number of blocks so that each phase has enough time to propagate all required
     // messages to all members before the next phase starts. If blocks are produced too fast, whole DKG sessions will
     // fail.
     int dkgPhaseBlocks;
+    int dkgNewPhaseBlocks;
 
     // The starting block inside the DKG interval for when mining of commitments starts. The value is inclusive.
     // Starting from this block, the inclusion of (possibly null) commitments is enforced until the first non-null
     // commitment is mined. The chosen value should be at least 5 * dkgPhaseBlocks so that it starts right after the
     // finalization phase.
     int dkgMiningWindowStart;
+    int dkgNewMiningWindowStart;
 
     // The ending block inside the DKG interval for when mining of commitments ends. The value is inclusive.
     // Choose a value so that miners have enough time to receive the commitment and mine it. Also take into consideration
@@ -89,6 +92,7 @@ struct LLMQParams {
     // should at the same time not be too large so that not too much space is wasted with null commitments in case a DKG
     // session failed.
     int dkgMiningWindowEnd;
+    int dkgNewMiningWindowEnd;
 
     // In the complaint phase, members will vote on other members being bad (missing valid contribution). If at least
     // dkgBadVotesThreshold have voted for another member to be bad, it will considered to be bad by all other members
@@ -98,6 +102,7 @@ struct LLMQParams {
 
     // Number of quorums to consider "active" for signing sessions
     int signingActiveQuorumCount;
+    int signingNewActiveQuorumCount;
 
     // Used for intra-quorum communication. This is the number of quorums for which we should keep old connections.
     // For non-rotated quorums it should be at least one more than the active quorums set.
@@ -130,6 +135,8 @@ static constexpr std::array<LLMQParams, 14> available_llmqs = {
         .threshold = 2,
 
         .dkgInterval = 24, // one DKG per hour
+        .dkgNewInterval = 60,
+
         .dkgPhaseBlocks = 2,
         .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
         .dkgMiningWindowEnd = 18,
@@ -155,12 +162,21 @@ static constexpr std::array<LLMQParams, 14> available_llmqs = {
         .threshold = 2,
 
         .dkgInterval = 24, // one DKG per hour
+        .dkgNewInterval = 60,
+
         .dkgPhaseBlocks = 2,
+        .dkgNewPhaseBlocks = 5,
+
         .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
+        .dkgNewMiningWindowStart = 25,
+
         .dkgMiningWindowEnd = 18,
+        .dkgNewMiningWindowEnd = 45,
+
         .dkgBadVotesThreshold = 2,
 
         .signingActiveQuorumCount = 2, // just a few ones to allow easier testing
+        .signingNewActiveQuorumCount = 2,
 
         .keepOldConnections = 3,
         .recoveryMembers = 3,
@@ -305,12 +321,21 @@ static constexpr std::array<LLMQParams, 14> available_llmqs = {
         .threshold = 8,
 
         .dkgInterval = 24, // one DKG per hour
+        .dkgNewInterval = 60,
+        
         .dkgPhaseBlocks = 2,
+        .dkgNewPhaseBlocks = 5,
+
         .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
+        .dkgNewMiningWindowStart = 25,
+
         .dkgMiningWindowEnd = 18,
+        .dkgNewMiningWindowEnd = 45,
+
         .dkgBadVotesThreshold = 7,
 
         .signingActiveQuorumCount = 4, // just a few ones to allow easier testing
+        .signingNewActiveQuorumCount = 4,
 
         .keepOldConnections = 5,
         .recoveryMembers = 6,
@@ -330,13 +355,23 @@ static constexpr std::array<LLMQParams, 14> available_llmqs = {
         .minSize = 10,
         .threshold = 7,
 
-        .dkgInterval = 24, // one DKG per hour
+        .dkgInterval = 24, // one DKG per hour => 60 / 24 = 2.5 minutes (block time)
+        .dkgNewInterval = 60,
+
         .dkgPhaseBlocks = 2,
-        .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
+        .dkgNewPhaseBlocks = 5,
+
+        .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization 
+        .dkgNewMiningWindowStart = 25,
+
         .dkgMiningWindowEnd = 18,
+        .dkgNewMiningWindowEnd = 45,
+
         .dkgBadVotesThreshold = 40,
 
         .signingActiveQuorumCount = 24, // a full day worth of LLMQs
+        .signingNewActiveQuorumCount = 24,
+
         .keepOldConnections = 25,
         .recoveryMembers = 25,
     },
@@ -356,12 +391,23 @@ static constexpr std::array<LLMQParams, 14> available_llmqs = {
         .threshold = 45,
 
         .dkgInterval = 24 * 12, // DKG cycle every 12 hours
+        .dkgNewInterval = 60 * 12,
+
         .dkgPhaseBlocks = 2,
+        .dkgNewPhaseBlocks = 5,
+
         .dkgMiningWindowStart = 42, // signingActiveQuorumCount + dkgPhaseBlocks * 5 = after finalization
+        .dkgNewMiningWindowStart = 57,
+
         .dkgMiningWindowEnd = 50,
+        .dkgNewMiningWindowEnd = 125,
+
         .dkgBadVotesThreshold = 48,
 
+
         .signingActiveQuorumCount = 32,
+        .signingNewActiveQuorumCount = 32,
+
         .keepOldConnections = 64,
         .recoveryMembers = 25,
     },
@@ -381,12 +427,21 @@ static constexpr std::array<LLMQParams, 14> available_llmqs = {
         .threshold = 240,
 
         .dkgInterval = 24 * 12, // one DKG every 12 hours
+        .dkgNewInterval = 60 * 12,
+
         .dkgPhaseBlocks = 4,
+        .dkgNewPhaseBlocks = 10,
+
         .dkgMiningWindowStart = 20, // dkgPhaseBlocks * 5 = after finalization
+        .dkgNewMiningWindowStart = 50,
+
         .dkgMiningWindowEnd = 28,
+        .dkgNewMiningWindowEnd = 70,
+
         .dkgBadVotesThreshold = 300,
 
         .signingActiveQuorumCount = 4, // two days worth of LLMQs
+        .signingNewActiveQuorumCount = 4,
 
         .keepOldConnections = 5,
         .recoveryMembers = 100,
@@ -408,12 +463,21 @@ static constexpr std::array<LLMQParams, 14> available_llmqs = {
         .threshold = 340,
 
         .dkgInterval = 24 * 24, // one DKG every 24 hours
+        .dkgNewInterval = 60 * 24,
+
         .dkgPhaseBlocks = 4,
+        .dkgNewPhaseBlocks = 10,
+
         .dkgMiningWindowStart = 20, // dkgPhaseBlocks * 5 = after finalization
+        .dkgNewMiningWindowStart = 50,
+
         .dkgMiningWindowEnd = 48,   // give it a larger mining window to make sure it is mined
+        .dkgNewMiningWindowEnd = 120,
+
         .dkgBadVotesThreshold = 300,
 
         .signingActiveQuorumCount = 4, // four days worth of LLMQs
+        .signingNewActiveQuorumCount = 4,
 
         .keepOldConnections = 5,
         .recoveryMembers = 100,
@@ -435,12 +499,21 @@ static constexpr std::array<LLMQParams, 14> available_llmqs = {
         .threshold = 67,
 
         .dkgInterval = 24, // one DKG per hour
+        .dkgNewInterval = 60,
+
         .dkgPhaseBlocks = 2,
+        .dkgNewPhaseBlocks = 5,
+
         .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
+        .dkgNewMiningWindowStart = 25,
+
         .dkgMiningWindowEnd = 18,
+        .dkgNewMiningWindowEnd = 45,
+
         .dkgBadVotesThreshold = 80,
 
         .signingActiveQuorumCount = 24, // a full day worth of LLMQs
+        .signingNewActiveQuorumCount = 24,
 
         .keepOldConnections = 25,
         .recoveryMembers = 50,
@@ -462,12 +535,21 @@ static constexpr std::array<LLMQParams, 14> available_llmqs = {
         .threshold = 17,
 
         .dkgInterval = 24, // one DKG per hour
+        .dkgNewInterval = 60,
+
         .dkgPhaseBlocks = 2,
+        .dkgNewPhaseBlocks = 5,
+
         .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
+        .dkgNewMiningWindowStart = 25,
+
         .dkgMiningWindowEnd = 18,
+        .dkgNewMiningWindowEnd = 45,
+
         .dkgBadVotesThreshold = 22,
 
         .signingActiveQuorumCount = 24, // a full day worth of LLMQs
+        .signingNewActiveQuorumCount = 24,
 
         .keepOldConnections = 25,
         .recoveryMembers = 12,
