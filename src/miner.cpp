@@ -26,6 +26,7 @@
 #include <evo/cbtx.h>
 #include <evo/simplifiedmns.h>
 #include <governance/governance.h>
+#include <llmq/commitment.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/chainlocks.h>
 #include <llmq/instantsend.h>
@@ -265,6 +266,21 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     pblock->nNewNonce      = 0;
     pblocktemplate->nPrevBits = pindexPrev->nBits;
     pblocktemplate->vTxSigOps[0] = GetLegacySigOpCount(*pblock->vtx[0]);
+
+    /*{
+        // Add an empty commitment transaction if no quorum transactions are available
+        llmq::CFinalCommitmentTxPayload emptyCommitment;
+        emptyCommitment.nHeight = pindexPrevNew->nHeight + 1;
+        emptyCommitment.commitment.llmqType = Consensus::LLMQType::LLMQ_50_60;
+        emptyCommitment.commitment.quorumHash = quorum_block_processor->m_quorum_base_block_index->GetBlockHash();
+        // Set empty commitment fields as necessary
+
+        CMutableTransaction emptyTx;
+        emptyTx.nVersion = 3;
+        emptyTx.nType = TRANSACTION_QUORUM_COMMITMENT;
+        SetTxPayload(emptyTx, emptyCommitment);
+        pblocktemplate->block.vtx.push_back(MakeTransactionRef(emptyTx));
+    }*/
 
     CValidationState state;
     if (!TestBlockValidity(state, m_clhandler, m_evoDb, chainparams, *pblock, pindexPrev, false, false)) {

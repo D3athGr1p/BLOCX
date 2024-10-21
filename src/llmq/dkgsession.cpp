@@ -88,7 +88,7 @@ bool CDKGSession::Init(const CBlockIndex* _pQuorumBaseBlockIndex, const std::vec
 
     if (LogAcceptCategory(BCLog::LLMQ) && utils::IsQuorumRotationEnabled(params, m_quorum_base_block_index)) {
         int cycleQuorumBaseHeight = m_quorum_base_block_index->nHeight - quorumIndex;
-        LogPrintf("cycleQuorumBaseHeight : %d, m_quorum_base_block_index->nHeight : %d, quorumIndex : %d\n", cycleQuorumBaseHeight, m_quorum_base_block_index->nHeight, quorumIndex);
+        LogPrintf("cycleQuorumBaseHeight : %d, m_quorum_base_block_index->nHeight : %d, quorumIndex : %d\n", cycleQuorumBaseHeight, m_quorum_base_block_index->nHeight, quorumIndex);        
         const CBlockIndex* pCycleQuorumBaseBlockIndex = m_quorum_base_block_index->GetAncestor(cycleQuorumBaseHeight);
         std::stringstream ss;
         for (const auto& mn : members) {
@@ -103,10 +103,10 @@ bool CDKGSession::Init(const CBlockIndex* _pQuorumBaseBlockIndex, const std::vec
     }
 
     if ((m_quorum_base_block_index->nHeight - quorumIndex) % (params.dkgInterval * 2) != 0) {
-        LogPrintf("DKG interval too short. height[%d] quorumIndex[%d] dkgInterval[%d]\n", m_quorum_base_block_index->nHeight, quorumIndex, params.dkgInterval);
-        return false;
+        LogPrintf("DKG interval too short. height[%d] quorumIndex[%d] dkgInterval[%d]", m_quorum_base_block_index->nHeight, quorumIndex, params.dkgInterval);
+        // return false;
     }
- 
+    
     if (!myProTxHash.IsNull()) {
         dkgDebugManager.InitLocalSessionStatus(params, quorumIndex, m_quorum_base_block_index->GetBlockHash(), m_quorum_base_block_index->nHeight);
         relayMembers = utils::GetQuorumRelayMembers(params, m_quorum_base_block_index, myProTxHash, true);

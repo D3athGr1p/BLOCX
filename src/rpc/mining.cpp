@@ -14,7 +14,9 @@
 #include <consensus/params.h>
 #include <consensus/validation.h>
 #include <core_io.h>
+#include <evo/specialtx.h>
 #include <key_io.h>
+#include <llmq/commitment.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/context.h>
 #include <llmq/chainlocks.h>
@@ -798,6 +800,38 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
         pblocktemplate = BlockAssembler(*sporkManager, *governance, *llmq_ctx.quorum_block_processor, *llmq_ctx.clhandler, *llmq_ctx.isman, *node_context.evodb, mempool, Params()).CreateNewBlock(scriptDummy);
         if (!pblocktemplate)
             throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
+
+        // {
+
+        //     // Add an empty commitment transaction if no quorum transactions are available
+        //     llmq::CFinalCommitmentTxPayload emptyCommitment;
+        //     emptyCommitment.nHeight = pindexPrevNew->nHeight + 1;
+	    //     emptyCommitment.commitment.llmqType = Consensus::LLMQType::LLMQ_50_60;
+
+        //     const Consensus::LLMQParams& llmqParams = Params().GetConsensus().llmqs[0];
+
+        //     int quorumBaseBlockHeight = pindexPrevNew->nHeight - (pindexPrevNew->nHeight % llmqParams.dkgInterval);
+            
+        //     std::cout << "quorumBaseBlockHeight: " << quorumBaseBlockHeight << std::endl;        
+        //     std::cout << "llmqParams.dkgInterval: " << llmqParams.dkgInterval << std::endl;        
+        //     uint256 quorumBaseBlockHash = llmq_ctx.quorum_block_processor->GetQuorumBlockHash(llmqParams, pindexPrevNew->nHeight, quorumBaseBlockHeight % llmqParams.dkgInterval);
+        //     std::cout << "quorumBaseBlockHeight % llmqParams.dkgInterval: " << (quorumBaseBlockHeight % llmqParams.dkgInterval) << std::endl;
+
+        //     if (quorumBaseBlockHash.IsNull()) {
+        //         throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't get quorum base block hash");
+        //     }
+
+        //     emptyCommitment.commitment.quorumHash = quorumBaseBlockHash;
+        //     emptyCommitment.commitment.signers = std::vector<bool>(llmqParams.size, false);
+        //     emptyCommitment.commitment.validMembers = std::vector<bool>(llmqParams.size, false);
+
+        //     // Set empty commitment fields as necessary
+        //     CMutableTransaction emptyTx;
+        //     emptyTx.nVersion = 3;
+        //     emptyTx.nType = TRANSACTION_QUORUM_COMMITMENT;
+        //     SetTxPayload(emptyTx, emptyCommitment);
+        //     pblocktemplate->block.vtx.push_back(MakeTransactionRef(emptyTx));
+        // }
 
         // Need to update only after we know CreateNewBlock succeeded
         pindexPrev = pindexPrevNew;
