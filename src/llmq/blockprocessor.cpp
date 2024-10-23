@@ -809,6 +809,27 @@ bool CQuorumBlockProcessor::GetMineableCommitmentsTx(const Consensus::LLMQParams
         CFinalCommitmentTxPayload qc;
         qc.nHeight = nHeight;
         qc.commitment = f;
+
+        if (IsQuorumMiningSporkENABLED()) {
+            auto paramTypeOpt = llmq::GetLLMQParams(f.llmqType);
+
+            if (!paramTypeOpt.has_value()) {
+                continue;
+            }
+
+            int n_Height = int(nHeight / paramTypeOpt->dkgInterval) * paramTypeOpt->dkgInterval;
+            
+            LogPrintf("-----+++++++++++------- nHeight %d\n", n_Height);
+            if (n_Height % (paramTypeOpt->dkgInterval * 2) != 0) {
+                qc.commitment.signers = std::vector<bool>(paramTypeOpt->size, false);
+                qc.commitment.validMembers = std::vector<bool>(paramTypeOpt->size, false);
+                qc.commitment.quorumPublicKey = CBLSPublicKey();
+                qc.commitment.quorumVvecHash.SetNull();
+                qc.commitment.quorumSig.Reset();
+                qc.commitment.membersSig.Reset();
+            }
+        }
+
         CMutableTransaction tx;
         tx.nVersion = 3;
         tx.nType = TRANSACTION_QUORUM_COMMITMENT;
